@@ -1,0 +1,11 @@
+# Pinned to the versions this project was developed and tested against.
+# Install into a virtualenv, never globally:
+#   python3.12 -m venv .venv && .venv/bin/pip install -r backend/requirements.txt
+fastapi==0.142.2
+uvicorn[standard]==0.54.0
+pydantic==2.13.5
+SQLAlchemy==2.1.1
+
+# Tests
+pytest==9.1.1
+httpx==0.28.1
