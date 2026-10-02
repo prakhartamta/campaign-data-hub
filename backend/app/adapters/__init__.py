@@ -9,6 +9,7 @@ from __future__ import annotations
 from .base import Adapter, CanonicalRow, ParseFailure, ParseResult
 from .linkedin_ads import LinkedInAdsAdapter
 from .meta_ads import MetaAdsAdapter
+from .google_ads import GoogleAdsAdapter
 
 # Register one instance per platform.
 # google_ads is intentionally absent: its adapter is being written separately. Until it is
@@ -17,6 +18,7 @@ from .meta_ads import MetaAdsAdapter
 ADAPTERS: list[Adapter] = [
     MetaAdsAdapter(),
     LinkedInAdsAdapter(),
+    GoogleAdsAdapter(),
 ]
 
 
