@@ -1,0 +1,17 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Database (rebuilt by the ingestion pipeline)
+*.db
+*.db-wal
+*.db-shm
+
+# Frontend
+node_modules/
+dist/
+
+# OS
+.DS_Store
