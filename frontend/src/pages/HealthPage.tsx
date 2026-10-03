@@ -4,7 +4,7 @@ import { useApi } from "../api/useApi";
 import type { DeliveriesPage, Delivery } from "../api/types";
 import { DeliveryDetail } from "../components/DeliveryDetail";
 import { HealthGrid } from "../components/HealthGrid";
-import { Legend } from "../components/Legend";
+import { StatusIcon } from "../components/icons";
 import { count } from "../lib/format";
 import { platformLabel } from "../lib/labels";
 import { buildGrid, slotKey } from "../lib/slots";
@@ -76,13 +76,13 @@ export function HealthPage() {
 
       {deliveries.data && (
         <>
-          <div className="summary">
-            <p className="muted">
+          <div className="health-head">
+            <h1>Data health</h1>
+            <p>
               <strong>{count(all.length)} deliveries</strong>: {count(received)} files received,{" "}
               {count(missing)} missing &middot; {counts.pass} pass &middot; {counts.warn} warn{" "}
               &middot; {counts.fail} fail
             </p>
-            <Legend />
           </div>
 
           <HealthGrid
@@ -94,15 +94,33 @@ export function HealthPage() {
           />
 
           {slot && slotIsMissing ? (
-            <section className="detail">
-              <h2>
-                {platformLabel(slot.platform)}, week of {slot.weekStart}{" "}
-                <span className="badge fail">missing</span>
-              </h2>
-              <p className="reason">
-                No file arrived for {platformLabel(slot.platform)}, week of {slot.weekStart}.
-                {expected !== null && ` ${count(expected)} rows expected.`}
-              </p>
+            <section className="detail" aria-label="Selected delivery">
+              <div className="detail-head">
+                <div className="detail-title">
+                  {/* No file arrived, so there is no file name to set in mono. */}
+                  <h2>
+                    {platformLabel(slot.platform)}, week of {slot.weekStart}
+                  </h2>
+                  <span className="badge missing">
+                    <StatusIcon status="missing" size={14} />
+                    <span className="cap">missing</span>
+                  </span>
+                </div>
+              </div>
+
+              <div className="wrong">
+                <h3>What&rsquo;s wrong</h3>
+                <ul className="problems">
+                  <li className="missing">
+                    <StatusIcon status="missing" size={18} />
+                    <span>
+                      No file arrived for {platformLabel(slot.platform)}, week of {slot.weekStart}.
+                      {expected !== null && ` ${count(expected)} rows expected.`}
+                    </span>
+                  </li>
+                </ul>
+              </div>
+
               <p className="muted">
                 There is nothing to check, because nothing arrived. The slot is still shown
                 because a delivery that never turns up is itself the defect.

@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { SummaryGroup } from "../api/types";
 import { count, money, percent, rate, sortable } from "../lib/format";
 import { platformLabel } from "../lib/labels";
@@ -19,6 +20,8 @@ interface Props {
   sort: SortKey;
   direction: SortDirection;
   onSort: (key: SortKey) => void;
+  /** Shown in place of the rows when the filters match nothing, inside the table's own frame. */
+  empty?: ReactNode;
 }
 
 const COLUMNS: { key: SortKey; label: string; numeric: boolean }[] = [
@@ -65,43 +68,100 @@ export function sortGroups(
   });
 }
 
-export function CampaignTable({ groups, sort, direction, onSort }: Props) {
+function Head({ sort, direction, onSort }: Omit<Props, "groups" | "empty">) {
+  return (
+    <thead>
+      <tr>
+        {COLUMNS.map((column) => (
+          <th
+            key={column.key}
+            className={column.numeric ? "numeric" : undefined}
+            aria-sort={
+              sort === column.key ? (direction === "asc" ? "ascending" : "descending") : "none"
+            }
+          >
+            <button type="button" className="sort-btn" onClick={() => onSort(column.key)}>
+              <span className="sort-label cap">{column.label}</span>
+              {/* A fixed-width slot, so the label does not shift as the arrow moves column. */}
+              <span className="sort-arrow" aria-hidden="true">
+                {sort === column.key ? (direction === "asc" ? "↑" : "↓") : ""}
+              </span>
+            </button>
+          </th>
+        ))}
+      </tr>
+    </thead>
+  );
+}
+
+/** Bar widths per column, so the skeleton has the shape of the table it stands in for. */
+const BAR_WIDTHS = [88, 0, 24, 72, 72, 56, 40, 56];
+const CAMPAIGN_WIDTHS = [150, 110, 180, 130, 165, 120, 175, 140];
+
+export function CampaignTableSkeleton() {
+  return (
+    <div className="table-card" aria-busy="true">
+      <table className="data-table campaigns-table">
+        <thead>
+          <tr>
+            {COLUMNS.map((column) => (
+              <th key={column.key} className={column.numeric ? "numeric" : undefined}>
+                <span className="sort-label cap">{column.label}</span>
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {Array.from({ length: 8 }, (_, row) => (
+            <tr key={row} className="skeleton-row">
+              {COLUMNS.map((column, index) => (
+                <td key={column.key} className={column.numeric ? "numeric" : undefined}>
+                  <span
+                    className="skeleton"
+                    style={{
+                      width: index === 1 ? CAMPAIGN_WIDTHS[row] : BAR_WIDTHS[index],
+                    }}
+                  />
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+export function CampaignTable({ groups, sort, direction, onSort, empty }: Props) {
   const rows = sortGroups(groups, sort, direction);
 
   return (
-    <table className="grid-table">
-      <thead>
-        <tr>
-          {COLUMNS.map((column) => (
-            <th
-              key={column.key}
-              className={column.numeric ? "numeric" : undefined}
-              aria-sort={
-                sort === column.key ? (direction === "asc" ? "ascending" : "descending") : "none"
-              }
-            >
-              <button type="button" onClick={() => onSort(column.key)}>
-                {column.label}
-                {sort === column.key ? (direction === "asc" ? " ↑" : " ↓") : ""}
-              </button>
-            </th>
+    <div className="table-card">
+      <table className="data-table campaigns-table">
+        <Head sort={sort} direction={direction} onSort={onSort} />
+        <tbody>
+          {/* The header stays when there is nothing to show: the columns are part of the answer. */}
+          {rows.length === 0 && empty !== undefined && (
+            <tr>
+              <td className="empty-cell" colSpan={COLUMNS.length}>
+                {empty}
+              </td>
+            </tr>
+          )}
+          {rows.map((group) => (
+            <tr key={`${group.platform}|${group.key}`}>
+              <td>{platformLabel(group.platform)}</td>
+              <td>{group.key}</td>
+              <td className="numeric">{count(group.rows)}</td>
+              <td className="numeric">{money(group.spend_usd)}</td>
+              <td className="numeric">{count(group.impressions)}</td>
+              <td className="numeric">{count(group.clicks)}</td>
+              <td className="numeric">{percent(group.ctr)}</td>
+              <td className="numeric">{rate(group.cpc)}</td>
+            </tr>
           ))}
-        </tr>
-      </thead>
-      <tbody>
-        {rows.map((group) => (
-          <tr key={`${group.platform}|${group.key}`}>
-            <td>{platformLabel(group.platform)}</td>
-            <td>{group.key}</td>
-            <td className="numeric">{count(group.rows)}</td>
-            <td className="numeric">{money(group.spend_usd)}</td>
-            <td className="numeric">{count(group.impressions)}</td>
-            <td className="numeric">{count(group.clicks)}</td>
-            <td className="numeric">{percent(group.ctr)}</td>
-            <td className="numeric">{rate(group.cpc)}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+        </tbody>
+      </table>
+    </div>
   );
 }

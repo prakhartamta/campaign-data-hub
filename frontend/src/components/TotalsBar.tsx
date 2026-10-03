@@ -1,9 +1,28 @@
 import type { Totals } from "../api/types";
 import { count, money, percent, rate } from "../lib/format";
 
+const LABELS = ["campaign-days", "spend", "impressions", "clicks", "CTR", "CPC"];
+
 // Always rendered from the API's own totals, never summed from the rows on screen: the table
 // shows one page of groups, and a bar that disagreed with it would be worse than no bar.
-export function TotalsBar({ totals }: { totals: Totals | null }) {
+export function TotalsBar({ totals, loading = false }: { totals: Totals | null; loading?: boolean }) {
+  // While the first answer is in flight the six cards stay, holding their height, so the page
+  // does not reflow when the numbers land.
+  if (loading && totals === null) {
+    return (
+      <div className="totals" aria-live="polite" aria-busy="true">
+        {LABELS.map((label) => (
+          <div className="tile" key={label}>
+            <span className="tile-label cap">{label}</span>
+            <span className="tile-value is-skeleton">
+              <span className="skeleton" />
+            </span>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   const tiles: [string, string][] = totals
     ? [
         ["campaign-days", count(totals.rows)],
@@ -19,7 +38,7 @@ export function TotalsBar({ totals }: { totals: Totals | null }) {
     <div className="totals" aria-live="polite">
       {tiles.map(([label, value]) => (
         <div className="tile" key={label}>
-          <span className="tile-label">{label}</span>
+          <span className="tile-label cap">{label}</span>
           <span className="tile-value">{value}</span>
         </div>
       ))}

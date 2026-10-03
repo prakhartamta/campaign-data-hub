@@ -1,15 +1,27 @@
-import { NavLink, Navigate, Route, Routes } from "react-router-dom";
+import { Link, NavLink, Navigate, Route, Routes } from "react-router-dom";
 import { CampaignsPage } from "./pages/CampaignsPage";
 import { HealthPage } from "./pages/HealthPage";
+import { LogoMark } from "./components/icons";
 
 export function App() {
   return (
     <>
       <header className="app-head">
-        <h1>Campaign Data Hub</h1>
+        {/* The product name is the brand, so each page's own h1 names the page instead. */}
+        <Link to="/campaigns" className="brand" aria-label="Campaign Data Hub, home">
+          <LogoMark />
+          <span className="brand-text">
+            <b>Campaign</b>
+            <span>Data Hub</span>
+          </span>
+        </Link>
         <nav>
-          <NavLink to="/campaigns">campaigns</NavLink>
-          <NavLink to="/health">data health</NavLink>
+          <NavLink to="/campaigns">
+            <span className="cap">campaigns</span>
+          </NavLink>
+          <NavLink to="/health">
+            <span className="cap">data health</span>
+          </NavLink>
         </nav>
       </header>
       <main>

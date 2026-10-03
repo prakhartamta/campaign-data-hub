@@ -4,6 +4,7 @@ import type { Check, DeliveryDetail as Detail, RejectedRow } from "../api/types"
 import { exclusionType, originalValues } from "../lib/excluded";
 import { count } from "../lib/format";
 import { checkLabel, levelLabel, levelRank, platformLabel } from "../lib/labels";
+import { DisclosureChevrons, StatusIcon } from "./icons";
 
 const EM_DASH = "—";
 
@@ -40,7 +41,7 @@ function Examples({ check }: { check: Check }) {
   }
 
   return (
-    <table className="grid-table examples">
+    <table className="data-table examples">
       <thead>
         <tr>
           {columns.map((column) => (
@@ -69,47 +70,45 @@ function Examples({ check }: { check: Check }) {
 function WhatIsWrong({ checks }: { checks: Check[] }) {
   const failed = checks.filter((check) => check.status !== "pass").sort(byUrgency);
 
-  if (failed.length === 0) {
-    return (
-      <>
-        <h3>What&rsquo;s wrong</h3>
-        <p className="muted">No problems found.</p>
-      </>
-    );
-  }
-
   return (
-    <>
+    <div className="wrong">
       <h3>What&rsquo;s wrong</h3>
-      <ul className="problems">
-        {failed.map((check) => (
-          <li key={check.check_name} className={check.status}>
-            {/* The message is the API's own sentence, counts included. Rewriting it here is how
-                a UI ends up describing something other than what the check decided. */}
-            {check.message}
-          </li>
-        ))}
-      </ul>
-    </>
+      {failed.length === 0 ? (
+        <p className="muted">No problems found.</p>
+      ) : (
+        <ul className="problems">
+          {failed.map((check) => (
+            <li key={check.check_name} className={check.status}>
+              <StatusIcon status={check.status} size={18} />
+              <span>
+                {/* The message is the API's own sentence, counts included. Rewriting it here is
+                    how a UI ends up describing something other than what the check decided. */}
+                <b className="cap">{check.status}</b> &middot; {check.message}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }
 
-function RowTiles({ delivery }: { delivery: Detail }) {
-  const tiles: [string, number][] = [
+function RowCounts({ delivery }: { delivery: Detail }) {
+  const cells: [string, number][] = [
     ["accepted", delivery.rows_accepted],
     ["rejected", delivery.rows_rejected],
     ["suppressed", delivery.rows_suppressed],
     ["total", delivery.rows_total],
   ];
   return (
-    <div className="totals small">
-      {tiles.map(([label, value]) => (
-        <div className="tile" key={label}>
-          <span className="tile-label">{label}</span>
-          <span className="tile-value">{count(value)}</span>
+    <dl className="counts">
+      {cells.map(([label, value]) => (
+        <div key={label}>
+          <dt className="cap">{label}</dt>
+          <dd>{count(value)}</dd>
         </div>
       ))}
-    </div>
+    </dl>
   );
 }
 
@@ -117,78 +116,102 @@ function ExcludedRows({ rows }: { rows: RejectedRow[] }) {
   if (rows.length === 0) return null;
 
   return (
-    <>
-      <h3>Excluded rows ({rows.length})</h3>
-      <table className="grid-table">
-        <thead>
-          <tr>
-            <th className="numeric">source row</th>
-            <th>type</th>
-            <th>reason</th>
-            <th>campaign</th>
-            <th>date</th>
-            <th className="numeric">spend</th>
-            <th className="numeric">impressions</th>
-            <th className="numeric">clicks</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row) => {
-            const values = originalValues(row);
-            const type = exclusionType(row);
-            return (
-              <tr key={row.source_row}>
-                <td className="numeric">{row.source_row}</td>
-                <td>
-                  <span className={`tag ${type}`}>{type}</span>
-                </td>
-                <td>{row.reasons.join("; ")}</td>
-                <td>{values.campaign}</td>
-                <td>{values.date}</td>
-                <td className="numeric">{values.spend}</td>
-                <td className="numeric">{values.impressions}</td>
-                <td className="numeric">{values.clicks}</td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </>
+    <div className="detail-block">
+      <h3>
+        Excluded rows <span className="count">({rows.length})</span>
+      </h3>
+      <div className="table-card">
+        <table className="data-table">
+          <thead>
+            <tr>
+              <th className="numeric">source row</th>
+              <th>type</th>
+              <th>reason</th>
+              <th>campaign</th>
+              <th>date</th>
+              <th className="numeric">spend</th>
+              <th className="numeric">impressions</th>
+              <th className="numeric">clicks</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => {
+              const values = originalValues(row);
+              const type = exclusionType(row);
+              return (
+                <tr key={row.source_row}>
+                  <td className="numeric">{row.source_row}</td>
+                  <td>
+                    <span className={`tag ${type}`}>
+                      <span className="cap">{type}</span>
+                    </span>
+                  </td>
+                  <td className="reason-cell">{row.reasons.join("; ")}</td>
+                  <td>{values.campaign}</td>
+                  <td>{values.date}</td>
+                  <td className="numeric">{values.spend}</td>
+                  <td className="numeric">{values.impressions}</td>
+                  <td className="numeric">{values.clicks}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
   );
 }
 
 function AllChecks({ checks }: { checks: Check[] }) {
   const ordered = [...checks].sort(byUrgency);
+  // <details> is the disclosure: it is collapsed by default and reopens closed on a new
+  // selection, because OneDelivery is keyed by delivery id and remounts.
   return (
     <details className="all-checks">
-      <summary>All checks ({checks.length})</summary>
-      <table className="grid-table">
-        <thead>
-          <tr>
-            <th>check</th>
-            <th>level</th>
-            <th>if it fails</th>
-            <th>result</th>
-            <th className="numeric">failed / checked</th>
-            <th>message</th>
-          </tr>
-        </thead>
-        <tbody>
-          {ordered.map((check) => (
-            <tr key={check.check_name} className={`check ${check.status}`}>
-              <td>{checkLabel(check.check_name)}</td>
-              <td>{levelLabel(check.level)}</td>
-              <td>{check.severity}</td>
-              <td>{check.status}</td>
-              <td className="numeric">{checkedRatio(check)}</td>
-              <td>
-                {check.message}
-                <Examples check={check} />
-              </td>
+      <summary>
+        <DisclosureChevrons />
+        All checks ({checks.length})
+      </summary>
+      <div className="table-card">
+        <table className="data-table checks-table">
+          <thead>
+            <tr>
+              <th>check</th>
+              <th>level</th>
+              <th>if it fails</th>
+              <th>result</th>
+              <th className="numeric">failed / checked</th>
+              <th>message</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {ordered.map((check) => (
+              <tr key={check.check_name} className={`check ${check.status}`}>
+                <td>
+                  <span className="cap">{checkLabel(check.check_name)}</span>
+                </td>
+                <td>
+                  <span className="cap">{levelLabel(check.level)}</span>
+                </td>
+                <td>
+                  <span className="cap">{check.severity}</span>
+                </td>
+                <td>
+                  <span className="check-result">
+                    <StatusIcon status={check.status} size={14} />
+                    <span className="cap">{check.status}</span>
+                  </span>
+                </td>
+                <td className="numeric">{checkedRatio(check)}</td>
+                <td className="message">
+                  {check.message}
+                  <Examples check={check} />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </details>
   );
 }
@@ -207,16 +230,27 @@ function OneDelivery({ id }: { id: string }) {
   if (!data) return null;
 
   return (
-    <section className="detail">
-      <h2>
-        {data.delivery_id} <span className={`badge ${data.health}`}>{data.health}</span>
-      </h2>
-      <p className="reason">
-        {platformLabel(data.platform)}, week of {data.week_start} &middot; {data.health_reason}
-      </p>
+    <section className="detail" aria-label="Selected delivery">
+      <div className="detail-head">
+        <div className="detail-title">
+          {/* The delivery id is the file name, so it is set in mono. */}
+          <h2 className="mono">{data.delivery_id}</h2>
+          <span className={`badge ${data.health}`}>
+            <StatusIcon status={data.health} size={14} />
+            <span className="cap">{data.health}</span>
+          </span>
+        </div>
+        <p className="reason">
+          {platformLabel(data.platform)}, week of {data.week_start} &middot; {data.health_reason}
+        </p>
+      </div>
 
-      <WhatIsWrong checks={data.checks} />
-      <RowTiles delivery={data} />
+      {/* What's wrong gets the width; the counts sit beside it rather than above the fold. */}
+      <div className="detail-cols">
+        <WhatIsWrong checks={data.checks} />
+        <RowCounts delivery={data} />
+      </div>
+
       <ExcludedRows rows={data.rejected_rows} />
       <AllChecks checks={data.checks} />
     </section>

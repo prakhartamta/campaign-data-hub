@@ -1,5 +1,6 @@
 import type { Delivery } from "../api/types";
 import { platformLabel } from "../lib/labels";
+import { SelectChevron } from "./icons";
 
 export interface FilterValues {
   platform: string;
@@ -30,23 +31,27 @@ export function Filters({ values, platforms, onChange, onClear }: Props) {
   return (
     <div className="filters">
       <label>
-        platform
-        <select
-          value={values.platform}
-          onChange={(event) => onChange({ platform: event.target.value })}
-        >
-          <option value="">all</option>
-          {/* The value stays the id, because it goes straight into the query string. */}
-          {platforms.map((platform) => (
-            <option key={platform} value={platform}>
-              {platformLabel(platform)}
-            </option>
-          ))}
-        </select>
+        <span className="field-label cap">platform</span>
+        {/* The chevron is drawn beside the select, which is why the select needs a wrapper. */}
+        <span className="select-wrap">
+          <select
+            value={values.platform}
+            onChange={(event) => onChange({ platform: event.target.value })}
+          >
+            <option value="">all</option>
+            {/* The value stays the id, because it goes straight into the query string. */}
+            {platforms.map((platform) => (
+              <option key={platform} value={platform}>
+                {platformLabel(platform)}
+              </option>
+            ))}
+          </select>
+          <SelectChevron />
+        </span>
       </label>
 
       <label>
-        from
+        <span className="field-label cap">from</span>
         <input
           type="date"
           value={values.dateFrom}
@@ -55,7 +60,7 @@ export function Filters({ values, platforms, onChange, onClear }: Props) {
       </label>
 
       <label>
-        to
+        <span className="field-label cap">to</span>
         <input
           type="date"
           value={values.dateTo}
@@ -63,7 +68,7 @@ export function Filters({ values, platforms, onChange, onClear }: Props) {
         />
       </label>
 
-      <button type="button" onClick={onClear} disabled={!active}>
+      <button type="button" className="btn-secondary cap" onClick={onClear} disabled={!active}>
         clear
       </button>
     </div>

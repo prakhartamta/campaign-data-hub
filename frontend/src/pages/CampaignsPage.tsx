@@ -2,7 +2,7 @@ import { useSearchParams } from "react-router-dom";
 import { api } from "../api/client";
 import { useApi } from "../api/useApi";
 import type { Delivery, DeliveriesPage, MetricsSummary } from "../api/types";
-import { CampaignTable } from "../components/CampaignTable";
+import { CampaignTable, CampaignTableSkeleton } from "../components/CampaignTable";
 import type { SortDirection, SortKey } from "../components/CampaignTable";
 import { Filters, platformsFrom } from "../components/Filters";
 import type { FilterValues } from "../components/Filters";
@@ -36,7 +36,7 @@ function EmptyState({ platform, deliveries }: { platform: string; deliveries: De
 
   return (
     <div className="empty">
-      <p>No campaign-days match these filters.</p>
+      <p className="empty-title">No campaign-days match these filters.</p>
       {blamed.length > 0 && (
         <>
           <p>These deliveries contributed no rows:</p>
@@ -106,15 +106,12 @@ export function CampaignsPage() {
   // page that lost its data.
   const refreshing = summary.loading && summary.data !== null;
 
+  const firstLoad = summary.loading && summary.data === null;
+
   return (
     <div className="page">
-      <div className="page-head">
-        <Filters
-          values={values}
-          platforms={platformsFrom(deliveries.data?.deliveries ?? [])}
-          onChange={update}
-          onClear={clear}
-        />
+      <div className="title-row">
+        <h1>Campaigns</h1>
         <RunIngestionButton
           onDone={() => {
             summary.reload();
@@ -123,13 +120,18 @@ export function CampaignsPage() {
         />
       </div>
 
+      <Filters
+        values={values}
+        platforms={platformsFrom(deliveries.data?.deliveries ?? [])}
+        onChange={update}
+        onClear={clear}
+      />
+
       {summary.error && (
         <p className="error">
           {summary.error.code}: {summary.error.message}
         </p>
       )}
-
-      {summary.loading && !summary.data && <p className="muted">loading&hellip;</p>}
 
       <div className={refreshing ? "refreshable is-refreshing" : "refreshable"}>
         {refreshing && (
@@ -139,17 +141,25 @@ export function CampaignsPage() {
         )}
 
         <div className="refreshable-body">
-          <TotalsBar totals={summary.data?.totals ?? null} />
+          <TotalsBar totals={summary.data?.totals ?? null} loading={firstLoad} />
 
-          {summary.data && groups.length === 0 && (
-            <EmptyState
-              platform={values.platform}
-              deliveries={deliveries.data?.deliveries ?? []}
+          {/* The table keeps its frame and header through every state, so the page has one
+              shape whether it is loading, empty or full. */}
+          {firstLoad && <CampaignTableSkeleton />}
+
+          {summary.data && (
+            <CampaignTable
+              groups={groups}
+              sort={sort}
+              direction={direction}
+              onSort={sortBy}
+              empty={
+                <EmptyState
+                  platform={values.platform}
+                  deliveries={deliveries.data?.deliveries ?? []}
+                />
+              }
             />
-          )}
-
-          {groups.length > 0 && (
-            <CampaignTable groups={groups} sort={sort} direction={direction} onSort={sortBy} />
           )}
         </div>
       </div>

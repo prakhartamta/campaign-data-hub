@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ApiError, api } from "../api/client";
 import type { Run } from "../api/types";
 import { clockTime, count } from "../lib/format";
+import { Spinner } from "./icons";
 
 interface Props {
   /** Called once the run succeeds, so the page can refetch what the recompute replaced. */
@@ -45,10 +46,7 @@ export function RunIngestionButton({ onDone }: Props) {
 
   return (
     <div className="ingest">
-      <button type="button" onClick={start} disabled={running}>
-        {running ? "Running…" : "Run ingestion"}
-      </button>
-
+      {/* The outcome reads left of the button, where the eye already is after clicking it. */}
       <span className="ingest-note" role="status" aria-live="polite">
         {error && (
           <span className="error">
@@ -57,12 +55,30 @@ export function RunIngestionButton({ onDone }: Props) {
         )}
         {!error && outcome && (
           <>
-            Run #{outcome.number} finished at {clockTime(outcome.run.finished_at)}:{" "}
-            {count(outcome.run.rows_accepted)} accepted, {count(outcome.run.rows_rejected)}{" "}
-            rejected, {count(outcome.run.rows_suppressed)} suppressed
+            <span className="run-number">Run #{outcome.number}</span> finished at{" "}
+            {clockTime(outcome.run.finished_at)}: {count(outcome.run.rows_accepted)} accepted,{" "}
+            {count(outcome.run.rows_rejected)} rejected, {count(outcome.run.rows_suppressed)}{" "}
+            suppressed
           </>
         )}
       </span>
+
+      <button
+        type="button"
+        className="btn-primary"
+        onClick={start}
+        disabled={running}
+        aria-busy={running || undefined}
+      >
+        {running ? (
+          <>
+            <Spinner />
+            Running…
+          </>
+        ) : (
+          "Run ingestion"
+        )}
+      </button>
     </div>
   );
 }

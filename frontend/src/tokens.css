@@ -1,0 +1,94 @@
+/* Campaign Data Hub — design tokens. Plain CSS, system fonts only.
+   Copied from the design handoff; every value the app paints with lives here. */
+
+:root {
+  /* Neutrals */
+  --color-bg:              #f6f7f9;  /* page background */
+  --color-surface:         #ffffff;  /* cards, tables, header */
+  --color-surface-muted:   #f9fafb;  /* table header rows, Total cell */
+  --color-hover:           #f6f8fb;  /* table row hover */
+  --color-hover-strong:    #f1f3f5;  /* button / header-button hover */
+  --color-border:          #e3e6eb;  /* cards, tables */
+  --color-border-row:      #eef0f3;  /* row dividers */
+  --color-border-input:    #cfd4dc;  /* inputs, secondary button, What's wrong box */
+  --color-border-hover:    #9aa3b0;  /* input hover */
+  --color-text:            #1b2230;
+  --color-text-2:          #3d4654;  /* table headers, secondary cells */
+  --color-text-muted:      #5a6474;  /* labels, meta text (6.2:1 on white) */
+  --color-text-disabled:   #8a93a1;
+
+  /* Accent: links, primary button, focus ring, sort arrow, selected cell, logo */
+  --color-accent:          #1f5fbf;
+  --color-accent-hover:    #174a96;
+  --color-focus-ring:      #1f5fbf;
+
+  /* Delivery health ONLY — never use for anything else */
+  --status-pass-fg:        #1a6b3c;
+  --status-pass-icon:      #1a7f45;
+  --status-pass-bg:        #ffffff;
+  --status-pass-border:    #cfe3d6;
+
+  --status-warn-fg:        #855400;
+  --status-warn-icon:      #b26b00;
+  --status-warn-bg:        #fdf6e7;
+  --status-warn-border:    #e8cf98;
+  --status-warn-row-bg:    #fdf8ec;  /* All checks row tint */
+  --status-warn-chip-border: #d9bd7d; /* "2 files" chip */
+  --status-warn-chip-fg:   #6e4600;
+  --status-warn-sub-border:#edd9ad;  /* nested table inside warn row */
+  --status-warn-sub-head:  #fefaf1;
+
+  --status-fail-fg:        #a8231a;
+  --status-fail-icon:      #c0281b;
+  --status-fail-bg:        #fdecea;
+  --status-fail-border:    #c0281b;  /* 2px in grid cells */
+  --status-fail-row-bg:    #fdf1ef;  /* All checks row tint */
+  --status-fail-sub-border:#f1c9c4;
+  --status-fail-sub-head:  #fdf5f4;
+
+  --status-missing-fg:     #3f4855;
+  --status-missing-icon:   #4b5563;
+  --status-missing-bg:     #eceef1;
+  --status-missing-border: #6b7482;  /* 2px dashed */
+
+  /* Loading skeleton */
+  --color-skeleton:        #e6e9ee;
+
+  /* Spacing — 8px scale (4px for tight pairs) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+
+  /* Radius */
+  --radius-sm: 4px;   /* badges, chips, skeleton bars */
+  --radius-md: 6px;   /* inputs, buttons, grid cells */
+  --radius-lg: 8px;   /* cards, tables, panels */
+
+  /* Type */
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --text-xs:  12px;
+  --text-sm:  13px;
+  --text-md:  14px;
+  --text-15:  15px;   /* What's wrong items */
+  --text-lg:  16px;
+  --text-xl:  18px;
+  --text-2xl: 20px;
+  --text-3xl: 24px;
+  --weight-regular:  400;
+  --weight-medium:   500;
+  --weight-semibold: 600;
+  --weight-bold:     700;
+
+  /* Fixed sizes */
+  --nav-h:     56px;
+  --control-h: 36px;
+  --th-h:      40px;
+  --row-h:     44px;
+  --cell-h:    56px;   /* health grid cell */
+  --focus-ring: 2px solid var(--color-focus-ring);
+}
