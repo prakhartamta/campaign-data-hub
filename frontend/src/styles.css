@@ -1,0 +1,174 @@
+/* Visual polish is not assessed; scannability is. Health is carried by glyph and label as well
+   as colour, so the grid stays readable without colour discrimination. */
+
+:root {
+  --ink: #1b1d20;
+  --muted: #5e636b;
+  --line: #d9dce1;
+  --surface: #ffffff;
+  --page: #f6f7f9;
+  --pass: #1d7a44;
+  --pass-bg: #e6f4ec;
+  --warn: #8a5a00;
+  --warn-bg: #fdf1d9;
+  --fail: #a32020;
+  --fail-bg: #fbe8e8;
+  --accent: #1b4fa0;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--page);
+  color: var(--ink);
+  font: 14px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+
+.app-head {
+  display: flex;
+  align-items: baseline;
+  gap: 24px;
+  padding: 16px 24px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+.app-head h1 { font-size: 16px; margin: 0; }
+.app-head nav { display: flex; gap: 16px; }
+.app-head a { color: var(--muted); text-decoration: none; padding-bottom: 2px; }
+.app-head a.active { color: var(--accent); border-bottom: 2px solid var(--accent); }
+
+main { padding: 24px; }
+.page { display: flex; flex-direction: column; gap: 16px; max-width: 1200px; }
+.page-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
+
+.filters { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; }
+.filters label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); }
+.filters select, .filters input, button {
+  font: inherit;
+  padding: 5px 8px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--surface);
+  color: inherit;
+}
+button { cursor: pointer; }
+button:disabled { cursor: default; opacity: 0.5; }
+
+.ingest { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.ingest-note { font-size: 12px; color: var(--muted); }
+
+.totals { display: flex; gap: 12px; flex-wrap: wrap; }
+.tile {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  min-width: 120px;
+}
+.tile-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+.tile-value { font-size: 18px; font-variant-numeric: tabular-nums; }
+
+.grid-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+.grid-table th, .grid-table td {
+  text-align: left;
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+.grid-table thead th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+.grid-table thead button { border: 0; background: none; padding: 0; font: inherit; color: inherit; text-transform: inherit; letter-spacing: inherit; }
+.grid-table .numeric { text-align: right; font-variant-numeric: tabular-nums; }
+.grid-table tbody tr:last-child td { border-bottom: 0; }
+
+.health-grid td.cell { padding: 6px; }
+.health-grid td.none { background: repeating-linear-gradient(45deg, var(--page), var(--page) 4px, transparent 4px, transparent 8px); }
+
+.chip {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  gap: 1px;
+  border-radius: 4px;
+  font-size: 12px;
+  text-align: left;
+}
+.chip.pass { background: var(--pass-bg); border-color: var(--pass); color: var(--pass); }
+.chip.warn { background: var(--warn-bg); border-color: var(--warn); color: var(--warn); }
+.chip.fail { background: var(--fail-bg); border-color: var(--fail); color: var(--fail); }
+.chip.selected { outline: 2px solid var(--accent); outline-offset: 1px; }
+.chip-count { font-size: 10px; opacity: 0.8; }
+
+.badge { font-size: 11px; padding: 2px 7px; border-radius: 10px; vertical-align: middle; }
+.badge.pass { background: var(--pass-bg); color: var(--pass); }
+.badge.warn { background: var(--warn-bg); color: var(--warn); }
+.badge.fail { background: var(--fail-bg); color: var(--fail); }
+
+.detail {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 16px;
+  margin-top: 16px;
+}
+.detail h2 { font-size: 15px; margin: 0 0 4px; }
+.detail h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); margin: 18px 0 8px; }
+.reason { margin: 0 0 12px; color: var(--muted); }
+
+.facts { display: grid; grid-template-columns: max-content 1fr; gap: 4px 16px; margin: 0; }
+.facts dt { font-size: 12px; color: var(--muted); }
+.facts dd { margin: 0; }
+
+tr.check.fail td { background: var(--fail-bg); }
+tr.check.warn td { background: var(--warn-bg); }
+tr.check.error td { background: var(--fail-bg); }
+tr.samples td { background: var(--page); font-size: 12px; }
+tr.samples pre { margin: 6px 0 0; white-space: pre-wrap; max-height: 220px; overflow: auto; }
+
+.empty { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 16px; }
+.empty ul { margin: 8px 0 0; padding-left: 20px; }
+
+.unplaced { margin-top: 12px; }
+.muted { color: var(--muted); margin: 0; }
+.error { color: var(--fail); margin: 0; }
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}
+
+/* --- refetch feedback ------------------------------------------------------
+   The previous answer stays on screen while a recompute lands, dimmed, so the page never
+   flashes empty between two states that are both correct. */
+
+.refreshable { position: relative; display: flex; flex-direction: column; gap: 16px; }
+.refreshable-body { display: flex; flex-direction: column; gap: 16px; transition: opacity 120ms ease; }
+.refreshable.is-refreshing .refreshable-body { opacity: 0.4; pointer-events: none; }
+
+.refresh-label {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  padding: 4px 12px;
+  border-radius: 12px;
+  background: var(--ink);
+  color: var(--surface);
+  font-size: 12px;
+}
+
+.ingest-note .error { color: var(--fail); }
