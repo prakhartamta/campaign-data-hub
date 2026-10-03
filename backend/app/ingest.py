@@ -52,7 +52,7 @@ def format_platform_table(result) -> list[str]:
         % ("platform", "rows", "failed", "suppr.", "spend_usd", "impressions", "clicks")
     ]
     totals = result.totals_by_platform()
-    grand = {"rows": 0, "failures": 0, "suppressed": 0, "micros": 0, "impressions": 0, "clicks": 0}
+    grand = {"rows": 0, "rejected": 0, "suppressed": 0, "micros": 0, "impressions": 0, "clicks": 0}
     for platform in sorted(totals):
         bucket = totals[platform]
         for key in grand:
@@ -62,7 +62,7 @@ def format_platform_table(result) -> list[str]:
             % (
                 platform,
                 bucket["rows"],
-                bucket["failures"],
+                bucket["rejected"],
                 bucket["suppressed"],
                 micros_to_usd(bucket["micros"]),
                 bucket["impressions"],
@@ -74,7 +74,7 @@ def format_platform_table(result) -> list[str]:
         % (
             "TOTAL",
             grand["rows"],
-            grand["failures"],
+            grand["rejected"],
             grand["suppressed"],
             micros_to_usd(grand["micros"]),
             grand["impressions"],

@@ -101,7 +101,10 @@ def build_row(
         raw_currency=currency,
         fx_rate=rate,
         raw_campaign=raw_campaign if raw_campaign != campaign else None,
-        raw_date=str(raw.get(DATE_FIELD)),
+        # Left unset: reading epoch milliseconds is this platform's only date path, not a
+        # deviation from it, and raw_date means "this row was written differently from its
+        # siblings". The timestamp stays recoverable from delivery_id and source_row.
+        raw_date=None,
     )
 
 

@@ -41,6 +41,9 @@ class Delivery(Base):
     duplicate_of: Mapped[str | None] = mapped_column(String)
 
     health: Mapped[str] = mapped_column(String)
+    # The single condition that decided the health, so the UI never re-derives it and the two
+    # can never disagree.
+    health_reason: Mapped[str] = mapped_column(String, default="")
 
     # rows_total = rows_accepted + rows_rejected + rows_suppressed.
     # rejected means a row failed a validity check; suppressed means the row was fine but removed
@@ -127,6 +130,10 @@ class RejectedRow(Base):
     # A list: all failing checks are collected rather than short-circuited on the first.
     reasons: Mapped[list] = mapped_column(JSON, default=list)
     raw: Mapped[dict] = mapped_column(JSON, default=dict)
+    # True when the row itself was invalid, false when it was excluded for a reason that is
+    # not its fault, such as being a duplicate copy or belonging to a quarantined delivery.
+    # Only blamed rows count towards the reject rate that can fail a delivery.
+    blamed: Mapped[bool] = mapped_column(default=True)
 
 
 class IngestionRun(Base):
