@@ -1,4 +1,5 @@
 import type { Delivery } from "../api/types";
+import { platformLabel } from "../lib/labels";
 import { buildGrid, slotKey } from "../lib/slots";
 
 interface Props {
@@ -28,7 +29,8 @@ export function HealthGrid({ deliveries, selected, onSelect }: Props) {
         <tbody>
           {grid.platforms.map((platform) => (
             <tr key={platform}>
-              <th scope="row">{platform}</th>
+              {/* The label is for reading; `platform` stays the id used in the URL and the API. */}
+              <th scope="row">{platformLabel(platform)}</th>
               {grid.weeks.map((week) => {
                 const slot = grid.slots.get(slotKey(platform, week));
                 if (!slot) {

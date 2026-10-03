@@ -1,4 +1,5 @@
 import type { Delivery } from "../api/types";
+import { platformLabel } from "../lib/labels";
 
 export interface FilterValues {
   platform: string;
@@ -35,9 +36,10 @@ export function Filters({ values, platforms, onChange, onClear }: Props) {
           onChange={(event) => onChange({ platform: event.target.value })}
         >
           <option value="">all</option>
+          {/* The value stays the id, because it goes straight into the query string. */}
           {platforms.map((platform) => (
             <option key={platform} value={platform}>
-              {platform}
+              {platformLabel(platform)}
             </option>
           ))}
         </select>

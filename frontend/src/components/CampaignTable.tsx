@@ -1,5 +1,6 @@
 import type { SummaryGroup } from "../api/types";
 import { count, money, percent, rate, sortable } from "../lib/format";
+import { platformLabel } from "../lib/labels";
 
 export type SortKey =
   | "campaign"
@@ -50,7 +51,8 @@ export function sortGroups(
       // The campaign name is the group's `key`, since the same shape also serves platform groups.
       order = left.key.localeCompare(right.key);
     } else if (key === "platform") {
-      order = left.platform.localeCompare(right.platform);
+      // By the label, so the column sorts the way it reads on screen.
+      order = platformLabel(left.platform).localeCompare(platformLabel(right.platform));
     } else if (key === "rows" || key === "impressions" || key === "clicks") {
       order = left[key] - right[key];
     } else {
@@ -89,7 +91,7 @@ export function CampaignTable({ groups, sort, direction, onSort }: Props) {
       <tbody>
         {rows.map((group) => (
           <tr key={`${group.platform}|${group.key}`}>
-            <td>{group.platform}</td>
+            <td>{platformLabel(group.platform)}</td>
             <td>{group.key}</td>
             <td className="numeric">{count(group.rows)}</td>
             <td className="numeric">{money(group.spend_usd)}</td>
