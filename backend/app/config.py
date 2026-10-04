@@ -90,7 +90,6 @@ def week_for(day: dt.date, weeks: list[Week] | None = None) -> Week | None:
 
 
 # --- Quality thresholds ----------------------------------------------------
-# Measured justification for each number: docs/findings.md sections 9 and 10.
 
 # A delivery FAILs above this reject rate. Counts only rows rejected by a row-level validity
 # check, never rows suppressed by deduplication or quarantine, so a file that is clean after

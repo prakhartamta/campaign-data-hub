@@ -110,7 +110,6 @@ The same diagram as an image: [docs/architecture.png](docs/architecture.png). On
 .
 ├── README.md                  this file
 ├── ASSIGNMENT.md              the brief
-├── NOTES.md                   deferred work and known gaps
 ├── docker-compose.yml         backend and frontend services
 ├── backend/
 │   ├── app/                   pipeline, adapters, checks, health rules, API (Python package)
@@ -122,7 +121,6 @@ The same diagram as an image: [docs/architecture.png](docs/architecture.png). On
 │   ├── deliveries/            the 15 delivery files, as received
 │   └── exchange_rates.json    fixed rates to USD
 ├── docs/
-│   ├── findings.md            the data defects in depth, with line numbers
 │   ├── architecture.png       the architecture diagram, rendered
 │   └── screenshots/           the two pages
 └── frontend/
@@ -173,7 +171,7 @@ The one judgment call that changes the total is `meta_ads_2026-06-08.csv`, whose
 
 ## Data findings
 
-Every defect the pipeline reported, from `GET /api/v1/deliveries/{id}`. Rows are CSV line numbers (the header is line 1) or LinkedIn array indices. More detail in [docs/findings.md](docs/findings.md).
+Every defect the pipeline reported, from `GET /api/v1/deliveries/{id}`. Rows are CSV line numbers (the header is line 1) or LinkedIn array indices.
 
 | File | Level | What is wrong | Caught by | Handling | Effect on the numbers |
 |---|---|---|---|---|---|
@@ -325,7 +323,7 @@ Add a platform:
 
 ## What I would do with more time
 
-From [NOTES.md](NOTES.md), most valuable first:
+Most valuable first:
 1. Quarantine only the bad spend column, keeping Meta 06-08's 1,403,288 impressions and 29,241 clicks, which look fine.
 2. Alert on health: the system shows a broken delivery but tells nobody.
 3. Record lateness: a delivery that arrives a week late only flips its slot from missing to present.

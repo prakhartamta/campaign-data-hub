@@ -1,7 +1,7 @@
 """Money and currency conversion.
 
 One rule: sum at full precision and round exactly once, where a number is displayed. Rounding
-per row costs a cent on this dataset; the evidence is in docs/findings.md section 7 (L2).
+per row costs a cent on this dataset; test_spend_is_rounded_once_not_per_row pins the rule.
 """
 
 from __future__ import annotations
