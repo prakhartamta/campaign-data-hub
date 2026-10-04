@@ -250,7 +250,7 @@ Every defect the pipeline reported, from `GET /api/v1/deliveries/{id}`. Rows are
 | `linkedin_ads_2026-06-22.json` | delivery | no file arrived | `delivery_present` | empty slot recorded as FAIL | 7 days of LinkedIn data absent |
 | `google_ads_2026-06-15_resend.csv` | delivery | byte-identical copy of 06-15 with `_resend` appended to the name | `duplicate_delivery_content`, `file_name_matches_convention` | counted once | -35 rows, $6,442.69 not double counted |
 
-`campaign_day_coverage` also warns on the three files with rejected rows, naming the campaign-days each one lost.
+`campaign_day_coverage` also warns on the three files with unreadable rows, naming the campaign-days each one lost.
 
 ## Normalization rules
 
@@ -396,9 +396,8 @@ Most valuable first:
 7. Re-ingest a single delivery, which needs the cross-delivery checks to become incremental.
 8. Flag the same campaign and date twice in one file with different numbers; this data has none.
 9. Scan subfolders of `data/deliveries`, which needs `delivery_id` to become a relative path.
+10. Make campaign_day_coverage count rows rejected by validity checks too. Today the negative-spend row in Meta 06-22 leaves a gap it does not report.
 
 ## How I built this
 
-I built it with Python, FastAPI, SQLAlchemy, React and Vite, using Claude Code as an AI assistant for drafting, review and tests.
-I recomputed the reference totals with separate code and checked that they match the pipeline to the cent, and the six tests pin the bugs I hit along the way.
-I then followed this README from a fresh clone, once with Docker and once by hand.
+I designed the approach and made the decisions described in this README. Claude Code wrote most of the implementation under my direction, and I reviewed it, tested it and changed it where I disagreed. The totals were checked against an independent recomputation and match to the cent. I followed this README from a fresh clone, once with Docker and once by hand.
