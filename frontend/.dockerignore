@@ -1,0 +1,4 @@
+# node_modules holds the host's native binaries (esbuild, rollup) built for macOS; copied in, they
+# would overwrite the Linux ones npm ci installed. dist is rebuilt inside the image.
+node_modules/
+dist/

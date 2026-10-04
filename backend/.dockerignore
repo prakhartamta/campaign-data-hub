@@ -1,0 +1,7 @@
+# Left on the host by local runs; nothing in the image needs them.
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.db
+*.db-wal
+*.db-shm
