@@ -193,7 +193,7 @@ The same diagram as an image: [docs/architecture.png](docs/architecture.png). On
 │   ├── package.json                    - dependencies and scripts
 │   ├── tsconfig.json                   - TypeScript settings
 │   └── vite.config.ts                  - dev server settings
-├── ASSIGNMENT.md                       - the assignment brief
+├── ASSESSMENT.md                       - the assessment brief
 ├── docker-compose.yml                  - runs backend and frontend
 └── README.md                           - this file
 ```
