@@ -27,7 +27,7 @@ function checkedRatio(check: Check): string {
  * The examples a check attached, as a table.
  *
  * Columns are the union of the keys present, in first-seen order, because every check attaches a
- * different shape: a coverage gap is (campaign, missing_date) while an unreadable field is
+ * different shape: a coverage gap is (campaign, date) while an unreadable field is
  * (source_row, field, raw_value, reason).
  */
 function Examples({ check }: { check: Check }) {

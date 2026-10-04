@@ -1,4 +1,4 @@
-"""Five tests, each covering something the brief grades or a bug that actually happened.
+"""Six tests, each covering something the brief grades or a bug that actually happened.
 
 Synthetic fixtures only: nothing here asserts a total from the provided data, so these tests stay
 valid if the data changes.
@@ -15,6 +15,8 @@ from decimal import Decimal
 
 from app.adapters.linkedin_ads import LinkedInAdsAdapter
 from app.adapters.meta_ads import MetaAdsAdapter
+from app.checks.base import CheckContext
+from app.checks.file import CampaignDayCoverage
 from app.config import Week
 from app.db import create_all, create_db_engine, create_session_factory
 from app.money import micros_to_usd
@@ -175,3 +177,45 @@ def test_epoch_dates_are_utc_regardless_of_host_timezone():
 
     assert completed.returncode == 0, completed.stderr
     assert completed.stdout.strip() == "2026-06-01"
+
+
+def test_coverage_calls_an_unreadable_row_unreadable_not_missing():
+    """A campaign-day whose row arrived without clicks is a coverage gap, worded as no readable
+    row. The row is in the file, so calling its date missing points readers at the wrong defect."""
+    rows = []
+    for day in range(7):
+        rows.append(
+            {
+                "campaign": "Alpha",
+                "date_ts": 1780272000000 + day * 86_400_000,
+                "spend": {"amount": "1.00", "currency": "EUR"},
+                "impressions": 100,
+                "clicks": 5,
+            }
+        )
+    # 2026-06-03 arrives without clicks, like the five rows in linkedin_ads_2026-06-08.json.
+    del rows[2]["clicks"]
+    payload = json.dumps(rows).encode()
+    result = LinkedInAdsAdapter().parse("linkedin_ads_2026-06-01.json", payload, RATES)
+
+    context = CheckContext(
+        delivery_id="linkedin_ads_2026-06-01.json",
+        platform="linkedin_ads",
+        week=WEEK[0],
+        expected_filename="linkedin_ads_2026-06-01.json",
+        rows=result.rows,
+        failures=result.failures,
+        is_missing=False,
+        has_name_suffix=False,
+        structural_error=None,
+        content_hash=None,
+        duplicate_of=None,
+    )
+    outcome = CampaignDayCoverage().run(context)
+
+    assert outcome.status == "warn"
+    assert (outcome.rows_checked, outcome.rows_failed) == (7, 1)
+    assert outcome.message == (
+        "1 of 7 campaign-days have no readable row; no readable rows at all for 2026-06-03"
+    )
+    assert outcome.samples == [{"campaign": "Alpha", "date": "2026-06-03"}]

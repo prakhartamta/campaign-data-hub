@@ -196,7 +196,7 @@ def inferred_factor(ratio: float) -> float:
 
 
 class CampaignDayCoverage(Check):
-    """Flags campaign-days that are absent after rejections, naming the specific gaps.
+    """Flags campaign-days with no readable row, naming the specific gaps.
 
     More legible than a row count: "App Install Push lost 2026-06-01" is the sentence a
     stakeholder acts on, where "one invalid date" is not.
@@ -218,6 +218,8 @@ class CampaignDayCoverage(Check):
             expected_days.append(day)
             day = day.fromordinal(day.toordinal() + 1)
 
+        # context.rows is every row the adapter could read, before any check's rejections apply. So
+        # a gap is a row that never arrived or arrived unreadable; the file alone cannot tell which.
         present = defaultdict(set)
         for row in context.rows:
             present[row.campaign].add(row.date)
@@ -226,7 +228,7 @@ class CampaignDayCoverage(Check):
         for campaign in sorted(present):
             for day in expected_days:
                 if day not in present[campaign]:
-                    gaps.append({"campaign": campaign, "missing_date": iso(day)})
+                    gaps.append({"campaign": campaign, "date": iso(day)})
 
         expected_total = len(present) * days_in(week)
         if not gaps:
@@ -241,14 +243,14 @@ class CampaignDayCoverage(Check):
             if all(day not in present[campaign] for campaign in present):
                 missing_everywhere.append(iso(day))
 
-        message = f"{len(gaps)} of {expected_total} campaign-days absent"
+        message = f"{len(gaps)} of {expected_total} campaign-days have no readable row"
         if missing_everywhere:
-            message += f"; no data at all for {', '.join(missing_everywhere)}"
+            message += f"; no readable rows at all for {', '.join(missing_everywhere)}"
 
         return CheckOutcome(
             status=STATUS_WARN,
             rows_checked=expected_total,
             rows_failed=len(gaps),
             message=message,
-            samples=sorted(gaps, key=lambda gap: (gap["campaign"], gap["missing_date"]))[:5],
+            samples=sorted(gaps, key=lambda gap: (gap["campaign"], gap["date"]))[:5],
         )
