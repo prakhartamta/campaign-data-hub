@@ -4,9 +4,17 @@ Ingests weekly Meta, Google and LinkedIn deliveries into one daily USD dataset a
 Python 3.12, FastAPI, SQLAlchemy and SQLite; React, TypeScript and Vite; nginx and Docker Compose.\
 Run `docker compose up --build`, then open http://localhost:8080.
 
-| Campaigns | Data health |
-|---|---|
-| ![Campaigns page](docs/screenshots/campaigns.png) | ![Data health page](docs/screenshots/health.png) |
+### Campaigns
+
+Spend, impressions, clicks, CTR and CPC per campaign, with filters, totals and sortable columns.
+
+<img src="docs/screenshots/campaigns.png" width="900" alt="Campaigns page">
+
+### Data health
+
+Every delivery's pass, warn or fail status by platform and week, with the checks behind one delivery.
+
+<img src="docs/screenshots/health.png" width="900" alt="Data health page">
 
 ## Quick start with Docker
 
@@ -70,10 +78,10 @@ flowchart TB
         adapters[["adapter registry: meta_ads, linkedin_ads, google_ads"]]
         checks[["check registry: 5 row, 4 file, 3 delivery checks"]]
         subgraph pipeline["run_pipeline() in pipeline.py"]
-            p1["1 discover files on the platform x week grid"] --> p2["2 parse each file in isolation"]
-            p2 --> p3["3 resolve slots that hold two files"] --> p4["4 resolve campaign identity across files"]
-            p4 --> p5["5 run checks, each file against its platform"] --> p6["6 collapse to one row per platform, campaign, date"]
-            p6 --> p7["7 classify health"] --> p8["8 persist: full recompute in one transaction"]
+            p1["Step 1: Discover files, place each in a platform-week slot"] --> p2["Step 2: Parse each file in isolation with its adapter"]
+            p2 --> p3["Step 3: Keep one file per slot, flag a copy or a conflict"] --> p4["Step 4: Unify campaign spellings across all files"]
+            p4 --> p5["Step 5: Run the 12 registered checks on each delivery"] --> p6["Step 6: Collapse to one row per platform, campaign, date"]
+            p6 --> p7["Step 7: Classify each delivery's health"] --> p8["Step 8: Persist a full recompute in one transaction"]
         end
         db[("SQLite: deliveries, check_results, metrics, rejected_rows, ingestion_runs")]
         api["FastAPI /api/v1: metrics, metrics/summary, deliveries, deliveries/{id}, ingestions"]
@@ -108,31 +116,86 @@ The same diagram as an image: [docs/architecture.png](docs/architecture.png). On
 
 ```
 .
-├── README.md                  this file
-├── ASSIGNMENT.md              the brief
-├── docker-compose.yml         backend and frontend services
-├── backend/
-│   ├── app/                   pipeline, adapters, checks, health rules, API (Python package)
-│   ├── tests/                 six pytest tests on synthetic fixtures
-│   ├── Dockerfile             ingests on start, then serves the API on one worker
-│   ├── requirements.txt       pinned Python dependencies
-│   └── pytest.ini             test path settings
-├── data/
-│   ├── deliveries/            the 15 delivery files, as received
-│   └── exchange_rates.json    fixed rates to USD
-├── docs/
-│   ├── architecture.png       the architecture diagram, rendered
-│   └── screenshots/           the two pages
-└── frontend/
-    ├── src/                   React app: pages, components, API client, formatting
-    ├── public/                favicon
-    ├── Dockerfile             builds the app with node, serves it with nginx
-    ├── nginx.conf             static files, fallback to index.html, /api and /docs proxy
-    ├── index.html             page shell
-    ├── package.json           dependencies and scripts
-    ├── package-lock.json      locked dependency tree for npm ci
-    ├── tsconfig.json          TypeScript settings
-    └── vite.config.ts         dev server and its /api proxy
+├── backend/                            - Python backend
+│   ├── app/                            - the backend code
+│   │   ├── adapters/                   - one reader per platform
+│   │   │   ├── __init__.py             - list of platforms
+│   │   │   ├── base.py                 - shared row format
+│   │   │   ├── google_ads.py           - reads Google Ads CSV
+│   │   │   ├── linkedin_ads.py         - reads LinkedIn Ads JSON
+│   │   │   └── meta_ads.py             - reads Meta Ads CSV
+│   │   ├── api/                        - the REST API
+│   │   │   ├── app.py                  - creates the FastAPI app
+│   │   │   ├── deliveries.py           - delivery health endpoints
+│   │   │   ├── deps.py                 - database session per request
+│   │   │   ├── errors.py               - one error format
+│   │   │   ├── ingestions.py           - runs ingestion on request
+│   │   │   ├── metrics.py              - campaign metrics endpoints
+│   │   │   └── schemas.py              - API response shapes
+│   │   ├── checks/                     - the 12 quality checks
+│   │   │   ├── base.py                 - check inputs and outputs
+│   │   │   ├── delivery.py             - checks on whole deliveries
+│   │   │   ├── file.py                 - checks on whole files
+│   │   │   ├── registry.py             - list of all checks
+│   │   │   └── row.py                  - checks on single rows
+│   │   ├── config.py                   - paths, weeks, thresholds
+│   │   ├── db.py                       - database connection
+│   │   ├── discovery.py                - matches files to weeks
+│   │   ├── health.py                   - decides pass, warn or fail
+│   │   ├── ingest.py                   - command-line ingestion
+│   │   ├── models.py                   - database tables
+│   │   ├── money.py                    - currency conversion
+│   │   ├── normalize.py                - merges campaign spellings
+│   │   └── pipeline.py                 - runs ingestion end to end
+│   ├── tests/                          - automated tests
+│   │   └── test_pipeline.py            - the six tests
+│   ├── Dockerfile                      - backend container image
+│   ├── pytest.ini                      - test settings
+│   └── requirements.txt                - Python dependencies
+├── data/                               - input data
+│   ├── deliveries/                     - the 15 delivery files
+│   └── exchange_rates.json             - currency rates to USD
+├── docs/                               - documentation images
+│   ├── screenshots/                    - screenshots of both pages
+│   └── architecture.png                - architecture diagram
+├── frontend/                           - React app
+│   ├── public/                         - favicon
+│   ├── src/                            - the app code
+│   │   ├── api/                        - talks to the backend
+│   │   │   ├── client.ts               - sends API requests
+│   │   │   ├── types.ts                - API response types
+│   │   │   └── useApi.ts               - loads data for a page
+│   │   ├── components/                 - parts of the pages
+│   │   │   ├── CampaignTable.tsx       - sortable campaign table
+│   │   │   ├── DeliveryDetail.tsx      - one delivery's checks
+│   │   │   ├── Filters.tsx             - platform and date filters
+│   │   │   ├── HealthGrid.tsx          - status of every delivery
+│   │   │   ├── icons.tsx               - status icons
+│   │   │   ├── Legend.tsx              - explains the status colours
+│   │   │   ├── RunIngestionButton.tsx  - the Run ingestion button
+│   │   │   └── TotalsBar.tsx           - totals above the table
+│   │   ├── lib/                        - helper functions
+│   │   │   ├── excluded.ts             - reads excluded rows
+│   │   │   ├── format.ts               - formats numbers and money
+│   │   │   ├── labels.ts               - display names
+│   │   │   └── slots.ts                - groups deliveries by week
+│   │   ├── pages/                      - the two pages
+│   │   │   ├── CampaignsPage.tsx       - Campaigns page
+│   │   │   └── HealthPage.tsx          - Data health page
+│   │   ├── App.tsx                     - header and page routes
+│   │   ├── main.tsx                    - app entry point
+│   │   ├── styles.css                  - styles
+│   │   └── tokens.css                  - colours, sizes and fonts
+│   ├── Dockerfile                      - builds and serves the app
+│   ├── index.html                      - HTML page
+│   ├── nginx.conf                      - web server and API proxy
+│   ├── package-lock.json               - exact dependency versions
+│   ├── package.json                    - dependencies and scripts
+│   ├── tsconfig.json                   - TypeScript settings
+│   └── vite.config.ts                  - dev server settings
+├── ASSIGNMENT.md                       - the assignment brief
+├── docker-compose.yml                  - runs backend and frontend
+└── README.md                           - this file
 ```
 
 How the parts connect:
