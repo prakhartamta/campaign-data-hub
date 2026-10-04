@@ -20,6 +20,8 @@ interface Props {
   sort: SortKey;
   direction: SortDirection;
   onSort: (key: SortKey) => void;
+  /** While true the rows give way to skeleton bars; the header, and sorting, stay. */
+  loading?: boolean;
   /** Shown in place of the rows when the filters match nothing, inside the table's own frame. */
   empty?: ReactNode;
 }
@@ -68,7 +70,7 @@ export function sortGroups(
   });
 }
 
-function Head({ sort, direction, onSort }: Omit<Props, "groups" | "empty">) {
+function Head({ sort, direction, onSort }: Pick<Props, "sort" | "direction" | "onSort">) {
   return (
     <thead>
       <tr>
@@ -96,59 +98,53 @@ function Head({ sort, direction, onSort }: Omit<Props, "groups" | "empty">) {
 
 /** Bar widths per column, so the skeleton has the shape of the table it stands in for. */
 const BAR_WIDTHS = [88, 0, 24, 72, 72, 56, 40, 56];
-const CAMPAIGN_WIDTHS = [150, 110, 180, 130, 165, 120, 175, 140];
+// Campaign names vary in length, so their bars do too: one entry per skeleton row.
+const CAMPAIGN_WIDTHS = [160, 120, 180, 140, 110, 170, 130, 150];
 
-export function CampaignTableSkeleton() {
+function SkeletonRows() {
   return (
-    <div className="table-card" aria-busy="true">
-      <table className="data-table campaigns-table">
-        <thead>
-          <tr>
-            {COLUMNS.map((column) => (
-              <th key={column.key} className={column.numeric ? "numeric" : undefined}>
-                <span className="sort-label cap">{column.label}</span>
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {Array.from({ length: 8 }, (_, row) => (
-            <tr key={row} className="skeleton-row">
-              {COLUMNS.map((column, index) => (
-                <td key={column.key} className={column.numeric ? "numeric" : undefined}>
-                  <span
-                    className="skeleton"
-                    style={{
-                      width: index === 1 ? CAMPAIGN_WIDTHS[row] : BAR_WIDTHS[index],
-                    }}
-                  />
-                </td>
-              ))}
-            </tr>
+    <>
+      {CAMPAIGN_WIDTHS.map((campaignWidth, row) => (
+        <tr key={row} className="skeleton-row">
+          {COLUMNS.map((column, index) => (
+            <td key={column.key} className={column.numeric ? "numeric" : undefined}>
+              <span
+                className="skeleton"
+                style={{ width: index === 1 ? campaignWidth : BAR_WIDTHS[index] }}
+              />
+            </td>
           ))}
-        </tbody>
-      </table>
-    </div>
+        </tr>
+      ))}
+    </>
   );
 }
 
-export function CampaignTable({ groups, sort, direction, onSort, empty }: Props) {
+export function CampaignTable({
+  groups,
+  sort,
+  direction,
+  onSort,
+  loading = false,
+  empty,
+}: Props) {
   const rows = sortGroups(groups, sort, direction);
 
   return (
-    <div className="table-card">
+    <div className="table-card" aria-busy={loading || undefined}>
       <table className="data-table campaigns-table">
         <Head sort={sort} direction={direction} onSort={onSort} />
         <tbody>
+          {loading && <SkeletonRows />}
           {/* The header stays when there is nothing to show: the columns are part of the answer. */}
-          {rows.length === 0 && empty !== undefined && (
+          {!loading && rows.length === 0 && empty !== undefined && (
             <tr>
               <td className="empty-cell" colSpan={COLUMNS.length}>
                 {empty}
               </td>
             </tr>
           )}
-          {rows.map((group) => (
+          {!loading && rows.map((group) => (
             <tr key={`${group.platform}|${group.key}`}>
               <td>{platformLabel(group.platform)}</td>
               <td>{group.key}</td>

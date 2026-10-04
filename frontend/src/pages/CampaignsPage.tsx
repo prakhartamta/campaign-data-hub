@@ -1,8 +1,9 @@
+import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { api } from "../api/client";
 import { useApi } from "../api/useApi";
 import type { Delivery, DeliveriesPage, MetricsSummary } from "../api/types";
-import { CampaignTable, CampaignTableSkeleton } from "../components/CampaignTable";
+import { CampaignTable } from "../components/CampaignTable";
 import type { SortDirection, SortKey } from "../components/CampaignTable";
 import { Filters, platformsFrom } from "../components/Filters";
 import type { FilterValues } from "../components/Filters";
@@ -21,17 +22,37 @@ const SORT_KEYS: SortKey[] = [
 ];
 
 /**
+ * Whether a delivery's week overlaps the date range the filters ask for.
+ *
+ * ISO dates compare correctly as strings. An unset bound is open, and a delivery with no week
+ * cannot be placed in time, so it only counts when no range is set.
+ */
+function overlapsRange(delivery: Delivery, dateFrom: string, dateTo: string): boolean {
+  if (dateFrom !== "" && (delivery.week_end === null || delivery.week_end < dateFrom)) {
+    return false;
+  }
+  if (dateTo !== "" && (delivery.week_start === null || delivery.week_start > dateTo)) {
+    return false;
+  }
+  return true;
+}
+
+/**
  * A filter that matches nothing is usually not an empty database but a delivery that was
  * quarantined or never arrived. Naming it turns a blank table into an explanation.
  *
- * The reason text is the API's own health_reason, never re-derived here.
+ * Only deliveries inside the filtered platform and dates are named: a June file cannot explain
+ * an empty October. The reason text is the API's own health_reason, never re-derived here.
  */
-function EmptyState({ platform, deliveries }: { platform: string; deliveries: Delivery[] }) {
+function EmptyState({ filters, deliveries }: { filters: FilterValues; deliveries: Delivery[] }) {
   const blamed = deliveries.filter(
     (delivery) =>
       delivery.health !== "pass" &&
       delivery.rows_accepted === 0 &&
-      (platform === "" || delivery.platform === platform),
+      // A byte-identical resend never explains a gap: its original's rows are already counted.
+      delivery.duplicate_of === null &&
+      (filters.platform === "" || delivery.platform === filters.platform) &&
+      overlapsRange(delivery, filters.dateFrom, filters.dateTo),
   );
 
   return (
@@ -76,6 +97,10 @@ export function CampaignsPage() {
   const summary = useApi<MetricsSummary>(() => api.summary(key), key);
   const deliveries = useApi<DeliveriesPage>(() => api.deliveries(), "deliveries");
 
+  // True while an ingestion run is in progress. The button owns the run; the page only needs to
+  // know one is happening, to show it on the numbers it is about to replace.
+  const [ingesting, setIngesting] = useState(false);
+
   function update(next: Partial<FilterValues>) {
     const merged = { ...values, ...next };
     const nextParams = new URLSearchParams();
@@ -101,12 +126,11 @@ export function CampaignsPage() {
   }
 
   const groups = summary.data?.groups ?? [];
-  // A refetch, not a first load: the previous answer is still on screen, so it is dimmed in
-  // place rather than removed. Taking the table away would make a 60ms recompute look like a
-  // page that lost its data.
-  const refreshing = summary.loading && summary.data !== null;
-
   const firstLoad = summary.loading && summary.data === null;
+  // Skeletons stand in for the numbers on a first load, and during a run, when everything on
+  // screen is about to be replaced. A filter change keeps the current answer up until the next
+  // one lands: that takes tens of milliseconds, and a skeleton that brief would only flicker.
+  const showSkeleton = firstLoad || ingesting;
 
   return (
     <div className="page">
@@ -117,6 +141,7 @@ export function CampaignsPage() {
             summary.reload();
             deliveries.reload();
           }}
+          onRunningChange={setIngesting}
         />
       </div>
 
@@ -133,36 +158,22 @@ export function CampaignsPage() {
         </p>
       )}
 
-      <div className={refreshing ? "refreshable is-refreshing" : "refreshable"}>
-        {refreshing && (
-          <span className="refresh-label" role="status">
-            Refreshing…
-          </span>
-        )}
+      <TotalsBar totals={summary.data?.totals ?? null} loading={showSkeleton} />
 
-        <div className="refreshable-body">
-          <TotalsBar totals={summary.data?.totals ?? null} loading={firstLoad} />
-
-          {/* The table keeps its frame and header through every state, so the page has one
-              shape whether it is loading, empty or full. */}
-          {firstLoad && <CampaignTableSkeleton />}
-
-          {summary.data && (
-            <CampaignTable
-              groups={groups}
-              sort={sort}
-              direction={direction}
-              onSort={sortBy}
-              empty={
-                <EmptyState
-                  platform={values.platform}
-                  deliveries={deliveries.data?.deliveries ?? []}
-                />
-              }
-            />
-          )}
-        </div>
-      </div>
+      {/* The table keeps its frame and header through every state, so the page has one shape
+          whether it is loading, empty or full. Only a failed first load has no table at all. */}
+      {(showSkeleton || summary.data) && (
+        <CampaignTable
+          groups={groups}
+          sort={sort}
+          direction={direction}
+          onSort={sortBy}
+          loading={showSkeleton}
+          empty={
+            <EmptyState filters={values} deliveries={deliveries.data?.deliveries ?? []} />
+          }
+        />
+      )}
     </div>
   );
 }

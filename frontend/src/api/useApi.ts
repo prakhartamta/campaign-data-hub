@@ -49,6 +49,12 @@ export function useApi<T>(load: () => Promise<T>, key: string): AsyncState<T> {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key, attempt]);
 
-  const reload = useCallback(() => setAttempt((value) => value + 1), []);
+  // Loading is set here as well as in the effect, which only runs after the next render. Without
+  // it there is one render in which a reload is pending but `loading` still reads false, and a
+  // page handing over from one busy state to this one would flash its data in between.
+  const reload = useCallback(() => {
+    setLoading(true);
+    setAttempt((value) => value + 1);
+  }, []);
   return { data, error, loading, reload };
 }

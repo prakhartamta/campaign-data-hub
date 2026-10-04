@@ -1,11 +1,14 @@
 /* Campaign Data Hub — design tokens. Plain CSS, system fonts only.
-   Copied from the design handoff; every value the app paints with lives here. */
+   Copied from the design handoff; every value the app paints with lives here. The pass
+   background and the fail and missing borders were softened after review. */
 
 :root {
   /* Neutrals */
   --color-bg:              #f6f7f9;  /* page background */
   --color-surface:         #ffffff;  /* cards, tables, header */
-  --color-surface-muted:   #f9fafb;  /* table header rows, Total cell */
+  --color-surface-muted:   #f9fafb;  /* Total cell, nested example tables */
+  --color-table-head:      #f3f4f5;  /* table header rows: darker than the page, so they read as a band */
+  --color-table-head-hover:#e7eaef;  /* sort button hover, darker again than the header */
   --color-hover:           #f6f8fb;  /* table row hover */
   --color-hover-strong:    #f1f3f5;  /* button / header-button hover */
   --color-border:          #e3e6eb;  /* cards, tables */
@@ -25,7 +28,7 @@
   /* Delivery health ONLY — never use for anything else */
   --status-pass-fg:        #1a6b3c;
   --status-pass-icon:      #1a7f45;
-  --status-pass-bg:        #ffffff;
+  --status-pass-bg:        #eef7f1;  /* light green */
   --status-pass-border:    #cfe3d6;
 
   --status-warn-fg:        #855400;
@@ -41,7 +44,7 @@
   --status-fail-fg:        #a8231a;
   --status-fail-icon:      #c0281b;
   --status-fail-bg:        #fdecea;
-  --status-fail-border:    #c0281b;  /* 2px in grid cells */
+  --status-fail-border:    #f0bfb9;  /* 1px, light, like warn's */
   --status-fail-row-bg:    #fdf1ef;  /* All checks row tint */
   --status-fail-sub-border:#f1c9c4;
   --status-fail-sub-head:  #fdf5f4;
@@ -49,7 +52,7 @@
   --status-missing-fg:     #3f4855;
   --status-missing-icon:   #4b5563;
   --status-missing-bg:     #eceef1;
-  --status-missing-border: #6b7482;  /* 2px dashed */
+  --status-missing-border: #cbd1d9;  /* 1px solid light grey */
 
   /* Loading skeleton */
   --color-skeleton:        #e6e9ee;

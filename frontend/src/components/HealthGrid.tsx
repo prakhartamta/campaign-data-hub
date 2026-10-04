@@ -57,6 +57,9 @@ export function HealthGrid({ deliveries, selected, onSelect }: Props) {
                 aria-label={`${platformLabel(platform)}, week of ${week}: ${status}`}
               >
                 <span className={`chip ${status}`}>
+                  {/* Hidden while the column headers show the week; on a narrow screen the
+                      headers go and the cell carries its own date. */}
+                  <span className="cell-week">{week}</span>
                   <StatusIcon status={status} />
                   <span className="cap">{status}</span>
                   {slot.deliveries.length > 1 && (
