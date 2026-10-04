@@ -262,6 +262,12 @@ def parse_one(
         outcome.structural_error = "missing required fields: " + ", ".join(parsed.missing_fields)
         return outcome
 
+    # A header and nothing else is a truncated upload, not a quiet week: without this it would
+    # pass every check, since there is no row for any of them to object to.
+    if not parsed.rows and not parsed.failures:
+        outcome.structural_error = "the file has no data rows"
+        return outcome
+
     outcome.parsed = parsed.rows
     outcome.failures = parsed.failures
     return outcome

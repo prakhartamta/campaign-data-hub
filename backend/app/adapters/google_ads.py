@@ -110,6 +110,7 @@ def build_row(
     # Decimal by a power of ten is exact, so this round-trips without losing anything, including
     # the one row in the data that is not a whole number of cents.
     amount = read_decimal(raw, COST_FIELD) / 1_000_000
+    spend_micros = read_micros(COST_FIELD, raw_cost, amount, rate)
 
     impressions = read_integer(raw, IMPRESSIONS_FIELD)
     clicks = read_integer(raw, CLICKS_FIELD)
@@ -118,7 +119,7 @@ def build_row(
         platform=PLATFORM,
         campaign=campaign,
         date=date,
-        spend_usd_micros=to_micros_usd(amount, rate),
+        spend_usd_micros=spend_micros,
         impressions=impressions,
         clicks=clicks,
         delivery_id=delivery_id,
@@ -160,9 +161,25 @@ def read_decimal(raw: dict[str, str | None], field: str) -> Decimal:
     if not value:
         raise FieldError(field, value, "missing")
     try:
-        return Decimal(value)
+        number = Decimal(value)
     except (ValueError, ArithmeticError, TypeError):
         raise FieldError(field, value, "not a number")
+    # Decimal accepts "NaN" and "Infinity", which are not amounts.
+    if not number.is_finite():
+        raise FieldError(field, value, "not a number")
+    return number
+
+
+def read_micros(field: str, raw_value: str, amount: Decimal, rate: Decimal) -> int:
+    """Convert an amount to micro-USD, rejecting the row when it is finer than a micro-dollar.
+
+    money.py raises rather than rounds; caught here, that is one rejected row instead of an
+    exception that would quarantine the whole file.
+    """
+    try:
+        return to_micros_usd(amount, rate)
+    except ValueError:
+        raise FieldError(field, raw_value, "more decimal places than a micro-dollar holds")
 
 
 def read_integer(raw: dict[str, str | None], field: str) -> int:

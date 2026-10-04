@@ -84,6 +84,7 @@ def build_row(
 
     date = read_date(raw)
     amount, currency, rate = read_spend(raw, rates)
+    spend_micros = read_micros(AMOUNT_FIELD, str(amount), amount, rate)
     impressions = read_integer(raw, IMPRESSIONS_FIELD)
     clicks = read_integer(raw, CLICKS_FIELD)
 
@@ -91,7 +92,7 @@ def build_row(
         platform=PLATFORM,
         campaign=campaign,
         date=date,
-        spend_usd_micros=to_micros_usd(amount, rate),
+        spend_usd_micros=spend_micros,
         impressions=impressions,
         clicks=clicks,
         delivery_id=delivery_id,
@@ -158,8 +159,23 @@ def read_spend(
         amount = Decimal(str(raw_amount))
     except (ValueError, ArithmeticError, TypeError):
         raise FieldError(AMOUNT_FIELD, str(raw_amount), "not a number")
+    # Decimal accepts "NaN" and "Infinity", which are not amounts.
+    if not amount.is_finite():
+        raise FieldError(AMOUNT_FIELD, str(raw_amount), "not a number")
 
     return amount, currency, rates[currency]
+
+
+def read_micros(field: str, raw_value: str, amount: Decimal, rate: Decimal) -> int:
+    """Convert an amount to micro-USD, rejecting the row when it is finer than a micro-dollar.
+
+    money.py raises rather than rounds; caught here, that is one rejected row instead of an
+    exception that would quarantine the whole file.
+    """
+    try:
+        return to_micros_usd(amount, rate)
+    except ValueError:
+        raise FieldError(field, raw_value, "more decimal places than a micro-dollar holds")
 
 
 def read_integer(raw: dict[str, object], field: str) -> int:
