@@ -11,10 +11,8 @@ from .linkedin_ads import LinkedInAdsAdapter
 from .meta_ads import MetaAdsAdapter
 from .google_ads import GoogleAdsAdapter
 
-# Register one instance per platform.
-# google_ads is intentionally absent: its adapter is being written separately. Until it is
-# registered, Google files have no known platform prefix and discovery reports them as unplaced,
-# which is the unrecognized-platform path working as designed rather than a crash.
+# Register one instance per platform. A file whose name starts with no registered platform's
+# prefix is reported by discovery as unplaced, rather than crashing the run.
 ADAPTERS: list[Adapter] = [
     MetaAdsAdapter(),
     LinkedInAdsAdapter(),

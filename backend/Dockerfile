@@ -14,8 +14,11 @@ COPY . .
 
 # Without these, config.py resolves both paths from the repo root, which inside the image is "/",
 # and the database would land in a directory the app user cannot write to.
+# PYTEST_ADDOPTS turns off pytest's cache for `docker compose exec backend pytest`: the app user
+# cannot write /app, and the cache would otherwise end every clean test run with a warning.
 ENV CDH_DATA_DIR=/data \
-    CDH_DATABASE_URL=sqlite:////db/campaign_data_hub.db
+    CDH_DATABASE_URL=sqlite:////db/campaign_data_hub.db \
+    PYTEST_ADDOPTS="-p no:cacheprovider"
 
 # A non-root user that can write the database directory and nothing else. The deliveries are
 # mounted read-only, so the pipeline has no way to modify its own input.
