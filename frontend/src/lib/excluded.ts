@@ -22,6 +22,9 @@ export interface OriginalValues {
 
 const ABSENT = "—";
 
+// The spend units a canonical row can carry that are not currency codes.
+const UNITS_OF_MEASURE = ["micros", "units"];
+
 function read(raw: Record<string, unknown>, keys: string[]): string | null {
   for (const key of keys) {
     const value = raw[key];
@@ -53,6 +56,9 @@ export function originalValues(row: RejectedRow): OriginalValues {
   // currency itself on a LinkedIn one.
   let unit = read(raw, ["spend_unit", "spend.currency", "currency"]);
   if (unit === null && raw["spend_usd"] !== undefined) unit = "usd";
+  // A currency code is shown in upper case, as ISO writes it: "USD", not the "usd" a Meta row
+  // carries. "micros" and "units" are units of measure, not codes, so they stay as they are.
+  if (unit !== null && !UNITS_OF_MEASURE.includes(unit)) unit = unit.toUpperCase();
 
   return {
     campaign: read(raw, ["campaign", "campaign_name"]) ?? ABSENT,

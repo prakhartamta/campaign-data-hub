@@ -7,6 +7,8 @@ at which point it catches nothing a bound would not. Statistics belong at file l
 
 from __future__ import annotations
 
+import datetime as dt
+
 from .base import (
     ACTION_FLAG,
     ACTION_REJECT_ROW,
@@ -141,6 +143,7 @@ class RowValuesNormalized(Check):
                         "field": "campaign",
                         "raw_value": row.raw_campaign,
                         "normalized_to": row.campaign,
+                        "why": campaign_change(row.raw_campaign, row.campaign),
                     }
                 )
             if row.raw_date is not None:
@@ -151,6 +154,7 @@ class RowValuesNormalized(Check):
                         "field": "date",
                         "raw_value": row.raw_date,
                         "normalized_to": iso(row.date),
+                        "why": date_change(row.raw_date, context.date_formats),
                     }
                 )
 
@@ -159,16 +163,63 @@ class RowValuesNormalized(Check):
 
         parts = []
         if campaigns:
-            parts.append(f"{campaigns} campaign name(s)")
+            parts.append(plural(campaigns, "campaign name"))
         if dates:
-            parts.append(f"{dates} date(s)")
+            parts.append(plural(dates, "date"))
         return CheckOutcome(
             status=STATUS_WARN,
             rows_checked=len(context.rows),
             rows_failed=len(samples),
-            message="normalized " + " and ".join(parts),
+            message=" and ".join(parts) + " normalized",
             samples=build_samples(samples),
         )
+
+
+def campaign_change(raw: str, normalized: str) -> str:
+    """Name what normalizing a campaign changed: "trailing spaces", "lowercase name", or both.
+
+    Said in words because the two values can look identical on screen, a trailing space above all.
+    """
+    reasons = []
+    if raw != raw.lstrip():
+        reasons.append("leading spaces")
+    if raw != raw.rstrip():
+        reasons.append("trailing spaces")
+    trimmed = raw.strip()
+    if trimmed != normalized:
+        if trimmed == trimmed.lower():
+            reasons.append("lowercase name")
+        else:
+            reasons.append("different capitalization")
+    return ", ".join(reasons) or "spelling unified across files"
+
+
+def date_change(raw: str, formats: tuple[str, ...]) -> str:
+    """Name the layout a fallback date was written in, and the one its file normally uses.
+
+    The raw and normalized dates can read the same, as 2026-06-01 does, so the layout is what
+    changed.
+    """
+    for date_format in formats:
+        try:
+            dt.datetime.strptime(raw, date_format)
+        except ValueError:
+            continue
+        return (
+            f"written as {layout(date_format)}; "
+            f"this file's standard format is {layout(formats[0])}"
+        )
+    return "written in a secondary layout for this platform"
+
+
+def layout(date_format: str) -> str:
+    """Write a strptime format the way people say it: %m/%d/%Y as MM/DD/YYYY."""
+    return date_format.replace("%Y", "YYYY").replace("%m", "MM").replace("%d", "DD")
+
+
+def plural(count: int, noun: str) -> str:
+    """A count with its noun, as a person would write it: "1 date", "3 dates"."""
+    return f"{count} {noun}" if count == 1 else f"{count} {noun}s"
 
 
 class MetricsNonNegative(Check):

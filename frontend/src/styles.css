@@ -760,6 +760,8 @@ tr.check.warn td { background: var(--status-warn-row-bg); }
 }
 .examples tbody tr:last-child td { border-bottom: 0; }
 .examples tbody tr:hover { background: none; }
+/* A value exactly as the file wrote it: mono, with whitespace kept so a trailing space shows. */
+.literal { font-family: var(--font-mono); white-space: pre; }
 
 /* The nested table stays white inside a tinted row, so it reads as attached evidence. */
 tr.check .examples tbody td { background: var(--color-surface); }

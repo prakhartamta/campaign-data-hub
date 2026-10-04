@@ -339,6 +339,7 @@ def build_baselines(outcomes: list[DeliveryOutcome]) -> dict[str, PlatformBaseli
 
 def apply_checks(outcome: DeliveryOutcome, baseline: PlatformBaseline | None) -> None:
     """Run every check against one delivery and apply the verdicts to its rows."""
+    adapter = adapters.by_platform().get(outcome.platform or "")
     context = CheckContext(
         delivery_id=outcome.delivery_id,
         platform=outcome.platform,
@@ -352,6 +353,7 @@ def apply_checks(outcome: DeliveryOutcome, baseline: PlatformBaseline | None) ->
         content_hash=outcome.content_hash,
         duplicate_of=outcome.duplicate_of,
         baseline=baseline,
+        date_formats=adapter.date_formats if adapter else (),
     )
 
     # One lookup of the original values, so a dropped row can carry its raw fields without going

@@ -52,19 +52,34 @@ function Examples({ check }: { check: Check }) {
       <tbody>
         {check.samples.map((sample, index) => (
           <tr key={index}>
-            {columns.map((column) => {
-              const value = sample[column];
-              return (
-                <td key={column}>
-                  {value === undefined || value === null ? EM_DASH : String(value)}
-                </td>
-              );
-            })}
+            {columns.map((column) => (
+              <td key={column}>
+                <ExampleValue check={check} column={column} value={sample[column]} />
+              </td>
+            ))}
           </tr>
         ))}
       </tbody>
     </table>
   );
+}
+
+/**
+ * One cell of an examples table.
+ *
+ * A raw value is evidence of what the file said, so an empty one reads "(empty)" rather than a
+ * blank cell, and a normalized one is quoted in mono with its whitespace kept: a trailing space
+ * is the whole finding there, and would otherwise be invisible.
+ */
+function ExampleValue({ check, column, value }: { check: Check; column: string; value: unknown }) {
+  if (value === undefined || value === null) return <>{EM_DASH}</>;
+  const text = String(value);
+  if (column !== "raw_value") return <>{text}</>;
+  if (text === "") return <span className="muted">(empty)</span>;
+  if (check.check_name === "row_values_normalized") {
+    return <span className="literal">{`"${text}"`}</span>;
+  }
+  return <>{text}</>;
 }
 
 function WhatIsWrong({ checks }: { checks: Check[] }) {

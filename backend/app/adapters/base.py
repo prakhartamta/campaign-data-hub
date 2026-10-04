@@ -101,6 +101,10 @@ class Adapter:
     # File extension this platform delivers, including the dot.
     extension: str = ""
 
+    # Date layouts this platform writes, primary first, as strptime formats. Empty for a platform
+    # with no text dates. The normalization check reads it to explain a row in a fallback layout.
+    date_formats: tuple[str, ...] = ()
+
     def parse(
         self, delivery_id: str, content: bytes, rates: dict[str, Decimal]
     ) -> ParseResult:

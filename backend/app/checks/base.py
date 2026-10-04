@@ -79,6 +79,9 @@ class CheckContext:
     content_hash: str | None
     duplicate_of: str | None
     baseline: PlatformBaseline | None = None
+    # The platform's declared date layouts, primary first, so a check can say which layout a row
+    # used and which one its file normally uses.
+    date_formats: tuple[str, ...] = ()
 
 
 @dataclass

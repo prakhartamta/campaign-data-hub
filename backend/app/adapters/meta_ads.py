@@ -43,6 +43,7 @@ class FieldError(Exception):
 class MetaAdsAdapter(Adapter):
     platform = PLATFORM
     extension = ".csv"
+    date_formats = DATE_FORMATS
 
     def parse(self, delivery_id: str, content: bytes, rates: dict[str, Decimal]) -> ParseResult:
         """Turn one Meta CSV into canonical rows and parse failures."""

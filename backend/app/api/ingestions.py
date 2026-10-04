@@ -1,4 +1,4 @@
-"""The ingestion endpoints: trigger a run, and read one back.
+"""The ingestion endpoint: trigger a run and return its summary.
 
 The pipeline is a full recompute inside one transaction, so two concurrent runs would delete each
 other's rows. A non-blocking lock turns the second request into a 409 instead.
@@ -54,17 +54,3 @@ def start_ingestion(session: Session = Depends(get_session)) -> RunOut:
 
     run = session.get(IngestionRun, result.run_id)
     return to_run_out(run)
-
-
-# -----------------------------------------------------------------------------
-# Left for Prakhar to write.
-#
-# GET /ingestions/{run_id}  ->  RunOut, or 404 when no such run
-#
-#   @router.get("/ingestions/{run_id}", response_model=RunOut)
-#   def get_ingestion(run_id: str, session: Session = Depends(get_session)) -> RunOut:
-#
-#   session.get(IngestionRun, run_id), raise HTTPException(404, ...) when it is None, and return
-#   to_run_out(run). Follows the shape of get_delivery in deliveries.py; ingestion_runs is the one
-#   table a run does not clear, so older run_ids stay readable.
-# -----------------------------------------------------------------------------

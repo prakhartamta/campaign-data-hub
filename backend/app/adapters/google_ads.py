@@ -40,6 +40,7 @@ class FieldError(Exception):
 class GoogleAdsAdapter(Adapter):
     platform = PLATFORM
     extension = ".csv"
+    date_formats = DATE_FORMATS
 
     def parse(self, delivery_id: str, content: bytes, rates: dict[str, Decimal]) -> ParseResult:
         """Turn one Google CSV into canonical rows and parse failures."""

@@ -83,18 +83,19 @@ def classify(facts: HealthInput) -> tuple[str, str]:
     #    check count here; rows merely suppressed as duplicates do not, which is what keeps
     #    condition 4 and this one from contradicting each other.
     if facts.rows_total and facts.rows_rejected / facts.rows_total > MAX_REJECT_RATE:
-        share = facts.rows_rejected / facts.rows_total
-        return HEALTH_FAIL, (
-            f"{facts.rows_rejected} of {facts.rows_total} rows rejected "
-            f"({share:.1%}, above the {MAX_REJECT_RATE:.0%} threshold)"
-        )
+        return HEALTH_FAIL, rejected_share(facts)
 
-    # 7. Something was wrong but the delivery is still usable.
+    # 7. Something was wrong but the delivery is still usable. When rows were rejected, the reason
+    #    leads with their share against the threshold, because that share is what kept it out of 6.
+    rejected = rejected_share(facts) if facts.rows_rejected else None
     for level, severity, outcome in facts.outcomes:
         if severity == SEVERITY_WARN and outcome.status in (STATUS_WARN, STATUS_ERROR):
-            return HEALTH_WARN, outcome.message or "a check raised a warning"
-    if facts.rows_rejected:
-        return HEALTH_WARN, f"{facts.rows_rejected} row(s) rejected"
+            message = outcome.message or "a check raised a warning"
+            if rejected:
+                return HEALTH_WARN, f"{rejected}; {message}"
+            return HEALTH_WARN, message
+    if rejected:
+        return HEALTH_WARN, rejected
     if facts.rows_suppressed:
         return HEALTH_WARN, f"{facts.rows_suppressed} row(s) suppressed"
     if facts.rows_normalized:
@@ -102,6 +103,25 @@ def classify(facts: HealthInput) -> tuple[str, str]:
 
     # 8. Nothing to report.
     return HEALTH_PASS, "no problems found"
+
+
+def rejected_share(facts: HealthInput) -> str:
+    """The rejected rows as a share of the file, against the threshold.
+
+    One sentence for conditions 6 and 7, so a FAIL and a WARN state their share the same way:
+    "3 of 35 rows rejected (8.6%, under the 10% threshold)".
+    """
+    share = facts.rows_rejected / facts.rows_total
+    if share > MAX_REJECT_RATE:
+        side = "above"
+    elif share == MAX_REJECT_RATE:
+        side = "at"
+    else:
+        side = "under"
+    return (
+        f"{facts.rows_rejected} of {facts.rows_total} rows rejected "
+        f"({share:.1%}, {side} the {MAX_REJECT_RATE:.0%} threshold)"
+    )
 
 
 def worst(healths: list[str]) -> str:
